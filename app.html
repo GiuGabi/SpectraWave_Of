@@ -1,0 +1,2164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SPECTRAWAVE • DSP • Fourier • FFT • Criptografia</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+<style>
+
+:root{
+    --bg-dark:#050505;
+    --bg-panel:#0a0a0a;
+    --bee-yellow:#FFD600;
+    --bee-yellow-glow:rgba(255,214,0,0.35);
+    --border:rgba(255,214,0,0.15);
+    --text:#d8d8d8;
+    --text-dim:#999;
+    --success:#00e676;
+    --purple:#ba68c8;
+    --blue:#40c4ff;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:var(--bg-dark);
+    color:var(--text);
+    font-family:'Montserrat', sans-serif;
+    min-height:100vh;
+}
+
+/* ============================================================
+   HEADER
+============================================================ */
+
+.app-header{
+    background:var(--bg-panel);
+    border-bottom:1px solid var(--border);
+    padding:18px 40px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    position:sticky;
+    top:0;
+    z-index:999;
+
+    backdrop-filter:blur(8px);
+}
+
+.logo-text{
+    color:var(--bee-yellow);
+    text-decoration:none;
+    font-size:26px;
+    font-weight:900;
+    letter-spacing:3px;
+    font-family:'Fira Code', monospace;
+
+    text-shadow:0 0 15px var(--bee-yellow-glow);
+}
+
+.nav-link{
+    color:var(--text-dim);
+    text-decoration:none;
+    font-size:12px;
+    font-family:'Fira Code', monospace;
+
+    border:1px solid rgba(255,214,0,0.15);
+
+    padding:10px 14px;
+    border-radius:6px;
+
+    transition:0.3s;
+}
+
+.nav-link:hover{
+    color:var(--bee-yellow);
+    border-color:var(--bee-yellow);
+    background:rgba(255,214,0,0.08);
+}
+
+.system-status{
+    color:var(--success);
+    font-size:12px;
+    letter-spacing:1px;
+    font-family:'Fira Code', monospace;
+}
+
+/* ============================================================
+   TABS
+============================================================ */
+
+.tabs-nav{
+    display:flex;
+    justify-content:center;
+
+    background:var(--bg-panel);
+
+    border-bottom:1px solid var(--border);
+}
+
+.tab-btn{
+    background:none;
+    border:none;
+
+    color:var(--text-dim);
+
+    padding:16px 32px;
+
+    cursor:pointer;
+
+    border-bottom:3px solid transparent;
+
+    transition:0.3s;
+
+    font-size:13px;
+    text-transform:uppercase;
+
+    font-family:'Fira Code', monospace;
+}
+
+.tab-btn:hover{
+    color:white;
+}
+
+.tab-btn.active{
+    color:var(--bee-yellow);
+    border-color:var(--bee-yellow);
+}
+
+.app-main{
+    width:95%;
+    max-width:1400px;
+
+    margin:30px auto;
+
+    padding-bottom:80px;
+}
+
+.tab-panel{
+    display:none;
+}
+
+.tab-panel.active{
+    display:block;
+}
+
+/* ============================================================
+   PANELS
+============================================================ */
+
+.didactic-panel{
+    background:var(--bg-panel);
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:30px;
+
+    margin-bottom:30px;
+
+    box-shadow:
+    0 0 30px rgba(255,214,0,0.03),
+    inset 0 0 20px rgba(255,255,255,0.01);
+}
+
+.didactic-title{
+    color:var(--bee-yellow);
+
+    font-size:20px;
+    font-weight:700;
+
+    margin-bottom:18px;
+
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.didactic-title::before{
+    content:'';
+    width:4px;
+    height:22px;
+    border-radius:2px;
+    background:var(--bee-yellow);
+}
+
+.didactic-text{
+    line-height:1.8;
+    color:#ccc;
+    margin-bottom:20px;
+}
+
+.formula-block{
+    background:black;
+
+    border-left:4px solid var(--bee-yellow);
+
+    padding:25px;
+
+    border-radius:0 6px 6px 0;
+
+    overflow-x:auto;
+
+    text-align:center;
+
+    margin-top:20px;
+}
+
+/* ============================================================
+   MANUAL BADGE
+============================================================ */
+
+.manual-badge{
+    display:inline-block;
+
+    margin-top:15px;
+
+    padding:8px 12px;
+
+    border-radius:5px;
+
+    background:rgba(255,214,0,0.08);
+
+    border:1px solid rgba(255,214,0,0.2);
+
+    color:var(--bee-yellow);
+
+    font-size:11px;
+
+    font-family:'Fira Code', monospace;
+}
+
+/* ============================================================
+   DROPZONE
+============================================================ */
+
+.drop-zone{
+    border:2px dashed rgba(255,214,0,0.3);
+
+    border-radius:8px;
+
+    padding:50px 30px;
+
+    text-align:center;
+
+    cursor:pointer;
+
+    background:rgba(255,214,0,0.02);
+
+    transition:0.3s;
+
+    display:block;
+
+    margin-bottom:30px;
+}
+
+.drop-zone:hover{
+    border-color:var(--bee-yellow);
+    background:rgba(255,214,0,0.05);
+}
+
+.drop-zone h3{
+    margin-bottom:10px;
+}
+
+.drop-zone p{
+    color:var(--text-dim);
+    font-family:'Fira Code', monospace;
+    font-size:12px;
+}
+
+input[type="file"]{
+    display:none;
+}
+
+/* ============================================================
+   CHARTS
+============================================================ */
+
+.charts-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:30px;
+    margin-bottom:40px;
+}
+
+@media(max-width:900px){
+    .charts-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+.chart-box{
+    background:var(--bg-panel);
+
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:20px;
+}
+
+.chart-header{
+    margin-bottom:18px;
+
+    text-transform:uppercase;
+
+    font-size:12px;
+
+    font-family:'Fira Code', monospace;
+
+    font-weight:700;
+}
+
+.chart-legend{
+    display:flex;
+    align-items:center;
+    gap:10px;
+
+    margin-top:15px;
+
+    font-size:12px;
+
+    color:#aaa;
+
+    font-family:'Fira Code', monospace;
+}
+
+.legend-dot{
+    width:12px;
+    height:12px;
+
+    border-radius:50%;
+
+    background:var(--bee-yellow);
+
+    box-shadow:0 0 10px var(--bee-yellow);
+}
+
+canvas{
+    width:100% !important;
+    max-width:100%;
+    height:380px !important;
+
+    display:block;
+
+    background:black;
+
+    border-radius:6px;
+
+    border:1px solid rgba(255,255,255,0.05);
+}
+
+/* ============================================================
+   TABLES
+============================================================ */
+
+.harmonic-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+
+    font-family:'Fira Code', monospace;
+    font-size:12px;
+}
+
+.harmonic-table th{
+    color:var(--bee-yellow);
+    padding:12px;
+    border-bottom:1px solid var(--border);
+}
+
+.harmonic-table td{
+    padding:12px;
+    border-bottom:1px solid rgba(255,255,255,0.04);
+}
+
+.harmonic-table tr:hover td{
+    background:rgba(255,214,0,0.03);
+}
+
+::-webkit-scrollbar{
+    width:8px;
+}
+
+::-webkit-scrollbar-thumb{
+    background:rgba(255,214,0,0.3);
+}
+
+/* ============================================================
+   NOVA ABA DE CRIPTOGRAFIA
+   ============================================================ */
+
+.crypto-main-hero{
+    display:grid;
+    grid-template-columns:1.2fr 0.8fr;
+    gap:30px;
+
+    margin-bottom:30px;
+}
+
+@media(max-width:950px){
+    .crypto-main-hero{
+        grid-template-columns:1fr;
+    }
+}
+
+.crypto-main-left,
+.crypto-main-right{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:35px;
+}
+
+.crypto-tag{
+    display:inline-block;
+
+    padding:8px 14px;
+    border-radius:999px;
+
+    background:rgba(255,214,0,0.08);
+    border:1px solid rgba(255,214,0,0.2);
+
+    color:var(--bee-yellow);
+
+    font-family:'Fira Code';
+    font-size:12px;
+
+    margin-bottom:20px;
+}
+
+.crypto-main-left h1{
+    color:var(--bee-yellow);
+    font-size:38px;
+    line-height:1.1;
+    margin-bottom:20px;
+}
+
+.crypto-main-left p{
+    color:#ccc;
+    line-height:1.8;
+    font-size:15px;
+}
+
+.crypto-mini-info{
+    display:flex;
+    gap:15px;
+    margin-top:30px;
+    flex-wrap:wrap;
+}
+
+.mini-box{
+    flex:1;
+    min-width:140px;
+
+    background:#000;
+    border:1px solid var(--border);
+    border-radius:10px;
+
+    padding:18px;
+}
+
+.mini-box span{
+    display:block;
+    color:#999;
+    font-size:11px;
+    margin-bottom:10px;
+
+    font-family:'Fira Code';
+}
+
+.mini-box strong{
+    color:#fff;
+    font-size:15px;
+}
+
+.crypto-process-card{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.process-line{
+    display:flex;
+    align-items:center;
+    gap:15px;
+
+    background:#000;
+    border:1px solid rgba(255,214,0,0.08);
+
+    padding:16px;
+    border-radius:10px;
+}
+
+.process-circle{
+    width:38px;
+    height:38px;
+
+    border-radius:50%;
+
+    background:var(--bee-yellow);
+    color:#000;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-weight:bold;
+    font-family:'Fira Code';
+}
+
+.process-line span{
+    color:#fff;
+    font-weight:600;
+}
+
+.crypto-pipeline{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:25px;
+
+    margin-bottom:35px;
+}
+
+.pipeline-box{
+    background:var(--bg-panel);
+    border:1px solid var(--border);
+
+    border-radius:12px;
+    padding:25px;
+}
+
+.pipeline-box h3{
+    color:var(--bee-yellow);
+    margin-bottom:15px;
+}
+
+.pipeline-box p{
+    color:#bbb;
+    line-height:1.7;
+    font-size:14px;
+
+    margin-bottom:20px;
+}
+
+.pipeline-code{
+    background:#000;
+    border-left:3px solid var(--purple);
+
+    padding:15px;
+
+    font-family:'Fira Code';
+    color:var(--success);
+
+    border-radius:6px;
+}
+
+.crypto-functional-grid {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* ============================================================
+   ÁREA FUNCIONAL DE UPLOAD E SENHA
+============================================================ */
+
+.crypto-upload-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 35px;
+}
+
+.crypto-upload-top h2 {
+    color: var(--bee-yellow);
+    margin: 15px 0;
+}
+
+.crypto-upload-top p {
+    color: #ccc;
+    font-size: 14px;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.crypto-section-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: rgba(255,214,0,0.1);
+    color: var(--bee-yellow);
+    font-family: 'Fira Code', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.crypto-dropzone {
+    display: block;
+    border: 2px dashed rgba(255,214,0,0.3);
+    border-radius: 10px;
+    padding: 40px 20px;
+    text-align: center;
+    background: rgba(255,214,0,0.02);
+    cursor: pointer;
+    transition: 0.3s;
+    margin-bottom: 25px;
+}
+
+.crypto-dropzone:hover {
+    border-color: var(--bee-yellow);
+    background: rgba(255,214,0,0.05);
+}
+
+.crypto-drop-icon {
+    font-size: 24px;
+    color: var(--bee-yellow);
+    margin-bottom: 10px;
+}
+
+.crypto-dropzone h3 {
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.crypto-dropzone span {
+    color: var(--text-dim);
+    font-size: 13px;
+}
+
+.crypto-meta-card {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.meta-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-family: 'Fira Code', monospace;
+}
+
+.meta-line span {
+    color: var(--text-dim);
+}
+
+.meta-line strong {
+    color: var(--bee-yellow);
+}
+
+.crypto-password-area {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.crypto-password-area label {
+    font-size: 14px;
+    color: #fff;
+    font-weight: 600;
+}
+
+.crypto-password-input {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px 15px;
+    color: #fff;
+    font-family: 'Fira Code', monospace;
+    font-size: 16px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.crypto-password-input:focus {
+    border-color: var(--bee-yellow);
+    box-shadow: 0 0 10px rgba(255,214,0,0.1);
+}
+
+.crypto-password-area small {
+    color: var(--text-dim);
+    font-size: 12px;
+}
+
+.crypto-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.crypto-action-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-family: 'Montserrat', sans-serif;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 1px;
+    border: none;
+}
+
+.crypto-action-btn.primary {
+    background: var(--bee-yellow);
+    color: #000;
+}
+
+.crypto-action-btn.primary:hover {
+    background: #e6c200;
+    box-shadow: 0 0 15px rgba(255,214,0,0.3);
+}
+
+.crypto-action-btn.secondary {
+    background: transparent;
+    border: 1px solid var(--bee-yellow);
+    color: var(--bee-yellow);
+}
+
+.crypto-action-btn.secondary:hover {
+    background: rgba(255,214,0,0.1);
+}
+
+.crypto-download-card {
+    margin-top: 25px;
+    background: rgba(0, 230, 118, 0.05);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.download-success {
+    color: var(--success);
+    font-weight: bold;
+}
+
+.download-btn {
+    background: var(--success);
+    color: #000;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.download-btn:hover {
+    background: #00c968;
+    box-shadow: 0 0 15px rgba(0,230,118,0.3);
+}
+
+/* Modificador para fazer o painel de upload ocupar a tela toda */
+.crypto-upload-panel.full-width {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 50px;
+}
+
+/* Ocultar o botão de download por padrão - será ativado via JS */
+#downloadArea {
+    display: none; 
+    margin-top: 25px;
+    background: rgba(0, 230, 118, 0.05);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<header class="app-header">
+
+<div style="display:flex; align-items:center; gap:20px;">
+
+<a href="capa.html" class="logo-text">
+SPECTRAWAVE
+</a>
+
+<div style="width:1px; height:35px; background:rgba(255,214,0,0.2);"></div>
+
+<div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+<a href="capa.html" class="nav-link">
+⬅ Voltar à Capa
+</a>
+
+<a href="relatorio.html" class="nav-link">
+Relatório
+</a>
+
+<a href="slides.html" class="nav-link">
+Slides
+</a>
+
+</div>
+
+</div>
+
+<div class="system-status">
+FFT • FOURIER • CONVOLUÇÃO • XOR • SHA-256
+</div>
+
+</header>
+
+<nav class="tabs-nav">
+
+<button class="tab-btn active" onclick="switchTab('analise')">
+Análise Espectral
+</button>
+
+<button class="tab-btn" onclick="switchTab('cripto')">
+Criptografia
+</button>
+
+</nav>
+
+<main class="app-main">
+
+<div class="didactic-panel">
+
+<h2 class="didactic-title">
+Arquitetura Matemática do Sistema
+</h2>
+
+<p class="didactic-text">
+O SPECTRAWAVE executa processamento digital de sinais (DSP) totalmente no navegador utilizando implementações matemáticas próprias sem bibliotecas externas de FFT, convolução ou Fourier.
+</p>
+
+<p class="didactic-text">
+O sistema converte o áudio para o domínio da frequência utilizando FFT manual, suaviza o espectro através de convolução gaussiana, reconstrói o sinal usando Série de Fourier e aplica criptografia XOR simétrica com derivação SHA-256.
+</p>
+
+<div class="formula-block">
+$$
+x(t)
+\rightarrow
+FFT
+\rightarrow
+X(f)
+\rightarrow
+Convolução
+\rightarrow
+Fourier
+\rightarrow
+XOR
+$$
+</div>
+
+<div class="manual-badge">
+IMPLEMENTAÇÃO MATEMÁTICA MANUAL • SEM FFT.JS • SEM DSP.JS • SEM MATH.JS
+</div>
+
+</div>
+
+<div class="didactic-panel">
+
+<h2 class="didactic-title">
+Conexão com Oscilações e Ondas
+</h2>
+
+<p class="didactic-text">
+Os gráficos representam matematicamente oscilações presentes no áudio digital.
+</p>
+
+<p class="didactic-text">
+A Transformada de Fourier converte as ondas sonoras do domínio temporal para o domínio espectral permitindo visualizar frequências invisíveis ao ouvido humano.
+</p>
+
+<div class="formula-block">
+$$
+f(t) \leftrightarrow F(\omega)
+$$
+</div>
+
+</div>
+
+<section id="tab-analise" class="tab-panel active">
+
+<label class="drop-zone">
+
+<h3>
+Selecione um arquivo de áudio
+</h3>
+
+<p>
+FFT • Série de Fourier • Convolução • DSP
+</p>
+
+<input type="file" id="fileInput" accept="audio/*">
+
+</label>
+
+<div id="statusAnalise"
+style="
+display:none;
+margin-bottom:20px;
+text-align:center;
+font-family:'Fira Code';
+color:var(--bee-yellow);
+">
+Processando Matemática...
+</div>
+
+<div id="results" style="display:none;">
+
+<div class="charts-grid">
+
+<div class="chart-box">
+
+<div class="chart-header" style="color:var(--bee-yellow);">
+Sinal Original
+</div>
+
+<canvas id="canvasTime"></canvas>
+
+<div class="chart-legend">
+<span class="legend-dot"></span>
+Dados processados manualmente
+</div>
+
+</div>
+
+<div class="chart-box">
+
+<div class="chart-header" style="color:var(--success);">
+FFT • Frequências
+</div>
+
+<canvas id="canvasFreq"></canvas>
+
+<div class="chart-legend">
+<span class="legend-dot"></span>
+Transformada Discreta de Fourier
+</div>
+
+</div>
+
+<div class="chart-box">
+
+<div class="chart-header" style="color:var(--purple);">
+Convolução Gaussiana
+</div>
+
+<canvas id="canvasConv"></canvas>
+
+<div class="chart-legend">
+<span class="legend-dot"></span>
+Filtro passa-baixa gaussiano
+</div>
+
+</div>
+
+<div class="chart-box">
+
+<div class="chart-header" style="color:var(--blue);">
+Reconstrução Fourier
+</div>
+
+<canvas id="canvasSeries"></canvas>
+
+<div class="chart-legend">
+<span class="legend-dot"></span>
+Série trigonométrica de Fourier
+</div>
+
+</div>
+
+</div>
+
+<div class="didactic-panel">
+
+<h2 class="didactic-title">
+Transformada Discreta de Fourier
+</h2>
+
+<p class="didactic-text">
+A FFT implementada utiliza o algoritmo Cooley-Tukey Radix-2 desenvolvido manualmente em JavaScript puro.
+</p>
+
+<div class="formula-block">
+
+$$
+X[k]
+=
+\sum_{n=0}^{N-1}
+x[n]
+e^{-i2\pi kn/N}
+$$
+
+</div>
+
+<div class="manual-badge">
+IMPLEMENTAÇÃO FFT MANUAL • SEM BIBLIOTECA EXTERNA
+</div>
+
+<div id="fftResults"></div>
+
+</div>
+
+<div class="didactic-panel">
+
+<h2 class="didactic-title">
+Convolução Discreta
+</h2>
+
+<p class="didactic-text">
+A convolução suaviza o espectro eliminando ruídos abruptos através de um kernel gaussiano.
+</p>
+
+<div class="formula-block">
+
+$$
+(f * g)[n]
+=
+\sum_{k=0}^{K-1}
+f[n-k]g[k]
+$$
+
+</div>
+
+<div class="manual-badge">
+CONVOLUÇÃO IMPLEMENTADA MANUALMENTE
+</div>
+
+<div id="convResults"></div>
+
+</div>
+
+<div class="didactic-panel">
+
+<h2 class="didactic-title">
+Série Trigonométrica de Fourier
+</h2>
+
+<p class="didactic-text">
+Os coeficientes harmônicos são calculados numericamente para reconstrução aproximada do sinal periódico.
+</p>
+
+<div class="formula-block" id="formulaSeriesContainer"></div>
+
+<div class="manual-badge">
+COEFICIENTES CALCULADOS MANUALMENTE
+</div>
+
+<div id="harmonicTableContainer"></div>
+
+</div>
+
+</div>
+
+</section>
+
+<section id="tab-cripto" class="tab-panel">
+
+    <div class="crypto-upload-panel full-width">
+        <div class="crypto-upload-top">
+            <div>
+                <span class="crypto-section-badge">PROCESSAMENTO LOCAL</span>
+                <h2>Criptografar / Descriptografar WAV</h2>
+                <p>O arquivo é processado localmente no navegador utilizando SHA-256 + XOR simétrico sem envio de dados externos.</p>
+            </div>
+        </div>
+
+        <label class="crypto-dropzone">
+            <div class="crypto-drop-icon">⬆</div>
+            <h3>Selecionar Arquivo WAV</h3>
+            <span id="fileNameDisplay">Clique para carregar o áudio</span>
+            <input type="file" id="cryptoFileInput" accept=".wav">
+        </label>
+
+        <div class="crypto-meta-card">
+            <div class="meta-line">
+                <span>Status</span>
+                <strong id="cryptoMetaDisplay">Aguardando arquivo...</strong>
+            </div>
+            <div class="meta-line">
+                <span>Formato</span>
+                <strong>WAV PCM</strong>
+            </div>
+            <div class="meta-line">
+                <span>Criptografia</span>
+                <strong>XOR + SHA-256</strong>
+            </div>
+        </div>
+
+        <div class="crypto-password-area">
+            <label>Senha Numérica</label>
+            <input type="password" id="cryptoPassword" maxlength="4" placeholder="Digite 4 dígitos" class="crypto-password-input">
+            <small>A mesma senha será necessária para descriptografar o áudio.</small>
+        </div>
+
+        <div class="crypto-buttons">
+            <button class="crypto-action-btn primary" onclick="runCrypto('encrypt')">Criptografar</button>
+            <button class="crypto-action-btn secondary" onclick="runCrypto('decrypt')">Descriptografar</button>
+        </div>
+
+        <div id="downloadArea" class="crypto-download-card" style="display: none;">
+            <div class="download-success" id="downloadMessage">✓ Arquivo processado com sucesso</div>
+            <a id="cryptoDownload" href="#" download class="download-btn"> Baixar Arquivo</a>
+        </div>
+    </div>
+
+    <div class="crypto-main-hero">
+        <div class="crypto-main-left">
+            <div class="crypto-tag">Segurança • WAV • XOR • SHA-256</div>
+            <h1>Criptografia Simétrica de Áudio WAV</h1>
+            <p>O sistema realiza criptografia diretamente sobre os bytes do áudio WAV, utilizando operações matemáticas e lógicas implementadas manualmente. Todo o processamento ocorre localmente no navegador, sem envio de dados.</p>
+            <div class="crypto-mini-info">
+                <div class="mini-box"><span>Algoritmo</span><strong>XOR Simétrico</strong></div>
+                <div class="mini-box"><span>Chave</span><strong>SHA-256</strong></div>
+                <div class="mini-box"><span>Formato</span><strong>WAV PCM</strong></div>
+            </div>
+        </div>
+        <div class="crypto-main-right">
+            <div class="crypto-process-card">
+                <div class="process-line"><div class="process-circle">1</div><span>Leitura WAV</span></div>
+                <div class="process-line"><div class="process-circle">2</div><span>Extração PCM</span></div>
+                <div class="process-line"><div class="process-circle">3</div><span>Reverse Frames</span></div>
+                <div class="process-line"><div class="process-circle">4</div><span>SHA-256</span></div>
+                <div class="process-line"><div class="process-circle">5</div><span>XOR</span></div>
+                <div class="process-line"><div class="process-circle">6</div><span>Reconstrução WAV</span></div>
+            </div>
+        </div>
+    </div>
+    
+    </section>
+
+</main>
+
+<script>
+
+/* ============================================================
+   TABS
+============================================================ */
+
+function switchTab(name){
+
+    document.querySelectorAll('.tab-btn')
+    .forEach(btn => btn.classList.remove('active'));
+
+    document.querySelectorAll('.tab-panel')
+    .forEach(panel => panel.classList.remove('active'));
+
+    document.querySelector(`.tab-btn[onclick="switchTab('${name}')"]`)
+    .classList.add('active');
+
+    document.getElementById(`tab-${name}`)
+    .classList.add('active');
+}
+
+/* ============================================================
+   KATEX
+============================================================ */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    renderMathInElement(document.body,{
+        delimiters:[
+            {left:"$$", right:"$$", display:true},
+            {left:"$", right:"$", display:false}
+        ]
+    });
+
+});
+
+/* ============================================================
+   IMPLEMENTAÇÃO MANUAL FFT
+   Sem uso de bibliotecas externas
+============================================================ */
+
+function nextPowerOfTwo(n){
+
+    let p = 1;
+
+    while(p < n){
+        p <<= 1;
+    }
+
+    return p;
+}
+
+/* ============================================================
+   HANN WINDOW
+============================================================ */
+
+function applyHannWindow(signal){
+
+    const n = signal.length;
+
+    for(let i = 0; i < n; i++){
+
+        signal[i] *=
+        0.5 *
+        (1 - Math.cos((2*Math.PI*i)/(n-1)));
+    }
+}
+
+/* ============================================================
+   FFT MANUAL
+============================================================ */
+
+function fft(real, imag){
+
+    const n = real.length;
+
+    if(n <= 1) return;
+
+    let j = 0;
+
+    for(let i=1;i<n;i++){
+
+        let bit = n >> 1;
+
+        for(; j & bit; bit >>=1){
+            j ^= bit;
+        }
+
+        j ^= bit;
+
+        if(i < j){
+
+            [real[i], real[j]] =
+            [real[j], real[i]];
+
+            [imag[i], imag[j]] =
+            [imag[j], imag[i]];
+        }
+    }
+
+    for(let len = 2; len <= n; len <<=1){
+
+        const half = len >> 1;
+
+        const angle = -2*Math.PI/len;
+
+        const wrStep = Math.cos(angle);
+        const wiStep = Math.sin(angle);
+
+        for(let i=0;i<n;i+=len){
+
+            let wr = 1;
+            let wi = 0;
+
+            for(let k=0;k<half;k++){
+
+                const a = i + k;
+                const b = i + k + half;
+
+                const tr =
+                wr * real[b] -
+                wi * imag[b];
+
+                const ti =
+                wr * imag[b] +
+                wi * real[b];
+
+                real[b] = real[a] - tr;
+                imag[b] = imag[a] - ti;
+
+                real[a] += tr;
+                imag[a] += ti;
+
+                const nwr =
+                wr * wrStep -
+                wi * wiStep;
+
+                wi =
+                wr * wiStep +
+                wi * wrStep;
+
+                wr = nwr;
+            }
+        }
+    }
+}
+
+/* ============================================================
+   MAGNITUDES
+============================================================ */
+
+function magnitudes(real, imag){
+
+    const out = new Float64Array(real.length);
+
+    for(let i=0;i<real.length;i++){
+
+        out[i] =
+        Math.sqrt(
+            real[i]*real[i] +
+            imag[i]*imag[i]
+        );
+    }
+
+    return out;
+}
+
+/* ============================================================
+   CONVOLUÇÃO MANUAL
+============================================================ */
+
+const GAUSSIAN_KERNEL = [
+0.0625,
+0.125,
+0.1875,
+0.25,
+0.1875,
+0.125,
+0.0625
+];
+
+function convolveManual(signal, kernel){
+
+    const N = signal.length;
+    const K = kernel.length;
+
+    const half = Math.floor(K/2);
+
+    const out = new Float64Array(N);
+
+    for(let n=0;n<N;n++){
+
+        let acc = 0;
+
+        for(let k=0;k<K;k++){
+
+            const idx = n-k+half;
+
+            if(idx >=0 && idx < N){
+
+                acc +=
+                signal[idx] *
+                kernel[k];
+            }
+        }
+
+        out[n] = acc;
+    }
+
+    return out;
+}
+
+/* ============================================================
+   SÉRIE DE FOURIER
+============================================================ */
+
+function calculateFourierSeries(
+samples,
+sampleRate,
+fundamentalHz,
+numHarmonics
+){
+
+    const usedLen =
+    Math.min(samples.length, 4096);
+
+    let a0 = 0;
+
+    for(let i=0;i<usedLen;i++){
+
+        a0 += samples[i];
+    }
+
+    a0 =
+    (2/usedLen) * a0;
+
+    const coeffs = [];
+
+    for(let n=1;n<=numHarmonics;n++){
+
+        let an = 0;
+        let bn = 0;
+
+        for(let i=0;i<usedLen;i++){
+
+            const t = i/sampleRate;
+
+            const omega =
+            2*Math.PI*n*fundamentalHz*t;
+
+            an +=
+            samples[i] *
+            Math.cos(omega);
+
+            bn +=
+            samples[i] *
+            Math.sin(omega);
+        }
+
+        an = (2/usedLen) * an;
+        bn = (2/usedLen) * bn;
+
+        coeffs.push({
+            n,
+            an,
+            bn,
+            mag:Math.sqrt(an*an + bn*bn)
+        });
+    }
+
+    return {
+        a0,
+        coeffs,
+        fundamentalHz
+    };
+}
+
+/* ============================================================
+   CANVAS
+============================================================ */
+
+function setupCanvas(id){
+
+    const canvas =
+    document.getElementById(id);
+
+    if(!canvas) return null;
+
+    const dpr =
+    window.devicePixelRatio || 1;
+
+    const width =
+    canvas.parentElement.clientWidth - 40;
+
+    canvas.width = width * dpr;
+    canvas.height = 380 * dpr;
+
+    canvas.style.width = width + "px";
+    canvas.style.height = "380px";
+
+    const ctx = canvas.getContext('2d');
+
+    ctx.scale(dpr, dpr);
+
+    const w = width;
+    const h = 380;
+
+    ctx.clearRect(0,0,w,h);
+
+    /* GRID */
+
+    ctx.strokeStyle =
+    'rgba(255,255,255,0.05)';
+
+    for(let i=1;i<10;i++){
+
+        ctx.beginPath();
+
+        ctx.moveTo((i/10)*w,0);
+        ctx.lineTo((i/10)*w,h);
+
+        ctx.stroke();
+    }
+
+    for(let i=1;i<6;i++){
+
+        ctx.beginPath();
+
+        ctx.moveTo(0,(i/6)*h);
+        ctx.lineTo(w,(i/6)*h);
+
+        ctx.stroke();
+    }
+
+    /* AXIS */
+
+    ctx.strokeStyle =
+    'rgba(255,255,255,0.2)';
+
+    ctx.beginPath();
+
+    ctx.moveTo(40,10);
+    ctx.lineTo(40,h-30);
+    ctx.lineTo(w-20,h-30);
+
+    ctx.stroke();
+
+    ctx.fillStyle =
+    'rgba(255,255,255,0.6)';
+
+    ctx.font = '11px Fira Code';
+
+    ctx.fillText(
+        'Amplitude',
+        10,
+        15
+    );
+
+    ctx.fillText(
+        'Tempo / Frequência',
+        w - 150,
+        h - 10
+    );
+
+    return {
+        canvas,
+        ctx,
+        w,
+        h
+    };
+}
+
+/* ============================================================
+   DRAW WAVEFORM
+============================================================ */
+
+function drawWaveform(id, samples, color){
+
+    const r = setupCanvas(id);
+
+    const {ctx,w,h} = r;
+
+    const mid = h/2;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    const step =
+    Math.max(1, Math.floor(samples.length / w));
+
+    for(let i=0;i<w;i++){
+
+        let mn = 1;
+        let mx = -1;
+
+        for(let j=0;j<step;j++){
+
+            const val =
+            samples[i*step+j];
+
+            if(val < mn) mn = val;
+            if(val > mx) mx = val;
+        }
+
+        ctx.moveTo(i, mid - mx*mid);
+        ctx.lineTo(i, mid - mn*mid);
+    }
+
+    ctx.stroke();
+}
+
+/* ============================================================
+   DRAW SPECTRUM
+============================================================ */
+
+function drawSpectrum(
+id,
+mags,
+sampleRate,
+color,
+gradColor
+){
+
+    const r = setupCanvas(id);
+
+    const {ctx,w,h} = r;
+
+    const limit =
+    Math.floor(mags.length/2);
+
+    const areaGrad =
+    ctx.createLinearGradient(0,0,0,h);
+
+    areaGrad.addColorStop(0, gradColor);
+    areaGrad.addColorStop(1, 'transparent');
+
+    ctx.fillStyle = areaGrad;
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,h);
+
+    for(let i=0;i<limit;i++){
+
+        const db =
+        20*Math.log10(mags[i] + 1e-6);
+
+        const norm =
+        (db + 120) / 120;
+
+        const y =
+        h - norm*h;
+
+        ctx.lineTo((i/limit)*w, y);
+    }
+
+    ctx.lineTo(w,h);
+
+    ctx.fill();
+
+    ctx.strokeStyle = color;
+
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    for(let i=0;i<limit;i++){
+
+        const db =
+        20*Math.log10(mags[i] + 1e-6);
+
+        const norm =
+        (db + 120)/120;
+
+        const x =
+        (i/limit)*w;
+
+        const y =
+        h - norm*h;
+
+        i===0 ?
+        ctx.moveTo(x,y) :
+        ctx.lineTo(x,y);
+    }
+
+    ctx.stroke();
+}
+
+/* ============================================================
+   RECONSTRUCTION
+============================================================ */
+
+function drawSeriesReconstruction(
+id,
+original,
+reconstructed
+){
+
+    const r = setupCanvas(id);
+
+    const {ctx,w,h} = r;
+
+    const mid = h/2;
+
+    ctx.strokeStyle =
+    'rgba(255,255,255,0.15)';
+
+    ctx.lineWidth = 1.5;
+
+    ctx.beginPath();
+
+    const stepO =
+    Math.max(1,
+    Math.floor(original.length/w));
+
+    for(let i=0;i<w;i++){
+
+        const idx = i*stepO;
+
+        if(idx < original.length){
+
+            const y =
+            mid - original[idx]*mid;
+
+            i===0 ?
+            ctx.moveTo(i,y) :
+            ctx.lineTo(i,y);
+        }
+    }
+
+    ctx.stroke();
+
+    ctx.strokeStyle =
+    '#40c4ff';
+
+    ctx.lineWidth = 2.5;
+
+    ctx.beginPath();
+
+    const stepR =
+    Math.max(1,
+    Math.floor(reconstructed.length/w));
+
+    for(let i=0;i<w;i++){
+
+        const idx = i*stepR;
+
+        if(idx < reconstructed.length){
+
+            const y =
+            mid -
+            reconstructed[idx]*mid;
+
+            i===0 ?
+            ctx.moveTo(i,y) :
+            ctx.lineTo(i,y);
+        }
+    }
+
+    ctx.stroke();
+}
+
+/* ============================================================
+   PROCESSAMENTO PRINCIPAL
+============================================================ */
+
+document.getElementById('fileInput')
+.addEventListener('change', async(e)=>{
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const status =
+    document.getElementById('statusAnalise');
+
+    const results =
+    document.getElementById('results');
+
+    status.style.display = 'block';
+    results.style.display = 'none';
+
+    try{
+
+        const buffer =
+        await file.arrayBuffer();
+
+        const audioCtx =
+        new(window.AudioContext ||
+        window.webkitAudioContext)();
+
+        const audioBuffer =
+        await audioCtx.decodeAudioData(buffer);
+
+        const mono =
+        audioBuffer.getChannelData(0);
+
+        const sampleRate =
+        audioBuffer.sampleRate;
+
+        const N =
+        nextPowerOfTwo(
+            Math.min(8192, mono.length)
+        );
+
+        const signal =
+        new Float64Array(N);
+
+        const imag =
+        new Float64Array(N);
+
+        for(let i=0;i<N;i++){
+
+            signal[i] = mono[i] || 0;
+        }
+
+        const timeData =
+        new Float64Array(signal);
+
+        applyHannWindow(signal);
+
+        fft(signal, imag);
+
+        const magsArr =
+        magnitudes(signal, imag);
+
+        const smoothed =
+        convolveManual(
+            magsArr,
+            GAUSSIAN_KERNEL
+        );
+
+        /* ============================================================
+           FFT RESULTS
+        ============================================================ */
+
+        const fftResults = [];
+
+        for(let i=0;i<15;i++){
+
+            fftResults.push({
+
+                bin:i,
+
+                frequency:
+                (
+                    i *
+                    sampleRate /
+                    N
+                ).toFixed(2),
+
+                magnitude:
+                magsArr[i].toFixed(5)
+            });
+        }
+
+        let fftHTML = `
+        <table class="harmonic-table">
+        <thead>
+        <tr>
+        <th>Bin</th>
+        <th>Freq</th>
+        <th>Magnitude</th>
+        </tr>
+        </thead>
+        <tbody>
+        `;
+
+        fftResults.forEach(r=>{
+
+            fftHTML += `
+            <tr>
+            <td>${r.bin}</td>
+            <td>${r.frequency} Hz</td>
+            <td>${r.magnitude}</td>
+            </tr>
+            `;
+        });
+
+        fftHTML += `
+        </tbody>
+        </table>
+        `;
+
+        document.getElementById('fftResults')
+        .innerHTML = fftHTML;
+
+        /* ============================================================
+           CONVOLUTION RESULTS
+        ============================================================ */
+
+        let convHTML = `
+        <table class="harmonic-table">
+        <thead>
+        <tr>
+        <th>Índice</th>
+        <th>Original</th>
+        <th>Convoluído</th>
+        </tr>
+        </thead>
+        <tbody>
+        `;
+
+        for(let i=0;i<12;i++){
+
+            convHTML += `
+            <tr>
+            <td>${i}</td>
+            <td>${magsArr[i].toFixed(5)}</td>
+            <td>${smoothed[i].toFixed(5)}</td>
+            </tr>
+            `;
+        }
+
+        convHTML += `
+        </tbody>
+        </table>
+        `;
+
+        document.getElementById('convResults')
+        .innerHTML = convHTML;
+
+        /* ============================================================
+           FUNDAMENTAL
+        ============================================================ */
+
+        let maxM = 0;
+        let f0 = 440;
+
+        for(let i=1;i<N/2;i++){
+
+            if(magsArr[i] > maxM){
+
+                maxM = magsArr[i];
+
+                f0 =
+                i *
+                (sampleRate/N);
+            }
+        }
+
+        /* ============================================================
+           FOURIER SERIES
+        ============================================================ */
+
+        const series =
+        calculateFourierSeries(
+            timeData,
+            sampleRate,
+            Math.max(20, f0),
+            8
+        );
+
+        const reconstructed =
+        new Float64Array(2048);
+
+        for(let i=0;i<2048;i++){
+
+            const t = i/sampleRate;
+
+            let val =
+            series.a0/2;
+
+            for(const c of series.coeffs){
+
+                val +=
+
+                c.an *
+                Math.cos(
+                    2*Math.PI*c.n*f0*t
+                )
+
+                +
+
+                c.bn *
+                Math.sin(
+                    2*Math.PI*c.n*f0*t
+                );
+            }
+
+            reconstructed[i] = val;
+        }
+
+        /* ============================================================
+           RENDER
+        ============================================================ */
+
+        status.style.display = 'none';
+        results.style.display = 'block';
+
+        setTimeout(()=>{
+
+            drawWaveform(
+                'canvasTime',
+                timeData,
+                '#FFD600'
+            );
+
+            drawSpectrum(
+                'canvasFreq',
+                magsArr,
+                sampleRate,
+                '#00e676',
+                'rgba(0,230,118,0.2)'
+            );
+
+            drawSpectrum(
+                'canvasConv',
+                smoothed,
+                sampleRate,
+                '#ba68c8',
+                'rgba(186,104,200,0.2)'
+            );
+
+            drawSeriesReconstruction(
+                'canvasSeries',
+                timeData.subarray(0,2048),
+                reconstructed
+            );
+
+        },100);
+
+        /* ============================================================
+           HARMONIC TABLE
+        ============================================================ */
+
+        let htmlTb = `
+        <table class="harmonic-table">
+        <thead>
+        <tr>
+        <th>n</th>
+        <th>Freq</th>
+        <th>aₙ</th>
+        <th>bₙ</th>
+        <th>|C|</th>
+        </tr>
+        </thead>
+        <tbody>
+        `;
+
+        let eqStr =
+        `$$f(t) \\approx ${(series.a0/2).toFixed(4)}`;
+
+        series.coeffs.forEach(c=>{
+
+            const hz =
+            c.n * f0;
+
+            htmlTb += `
+            <tr>
+            <td>${c.n}</td>
+            <td>${hz.toFixed(2)} Hz</td>
+            <td>${c.an.toFixed(5)}</td>
+            <td>${c.bn.toFixed(5)}</td>
+            <td>${c.mag.toFixed(5)}</td>
+            </tr>
+            `;
+
+            eqStr += `
+            +
+            ${c.an.toFixed(3)}
+            \\cos(2\\pi ${hz.toFixed(0)} t)
+
+            +
+
+            ${c.bn.toFixed(3)}
+            \\sin(2\\pi ${hz.toFixed(0)} t)
+            `;
+        });
+
+        eqStr += "$$";
+
+        htmlTb += `
+        </tbody>
+        </table>
+        `;
+
+        document.getElementById(
+            'harmonicTableContainer'
+        ).innerHTML = htmlTb;
+
+        document.getElementById(
+            'formulaSeriesContainer'
+        ).innerHTML = eqStr;
+
+        renderMathInElement(
+            document.getElementById(
+                'formulaSeriesContainer'
+            ),
+            {
+                delimiters:[
+                    {
+                        left:"$$",
+                        right:"$$",
+                        display:true
+                    }
+                ]
+            }
+        );
+
+    }catch(err){
+
+        status.innerHTML =
+        "Erro: " + err.message;
+    }
+
+});
+
+/* ============================================================
+   LÓGICA DE CRIPTOGRAFIA WAV
+============================================================ */
+
+document.getElementById('cryptoFileInput').addEventListener('change', function(e) {
+    const fileName = e.target.files[0] ? e.target.files[0].name : "Clique para carregar o áudio";
+    document.getElementById('fileNameDisplay').innerText = fileName;
+});
+
+async function runCrypto(mode) {
+    const fileInput = document.getElementById('cryptoFileInput');
+    const password = document.getElementById('cryptoPassword').value;
+    const statusDisplay = document.getElementById('cryptoMetaDisplay');
+    const downloadArea = document.getElementById('downloadArea');
+    const downloadLink = document.getElementById('cryptoDownload');
+    const downloadMessage = document.getElementById('downloadMessage');
+
+    if (!fileInput.files.length) {
+        alert("Por favor, selecione um arquivo WAV.");
+        return;
+    }
+    
+    // Validação estrita da senha
+    if (password.length !== 4 || isNaN(password)) {
+        alert("A senha deve conter exatamente 4 dígitos numéricos.");
+        return;
+    }
+
+    statusDisplay.innerText = "Processando criptografia...";
+    statusDisplay.style.color = "var(--bee-yellow)";
+    downloadArea.style.display = 'none';
+
+    try {
+        const file = fileInput.files[0];
+        const arrayBuffer = await file.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuffer);
+
+        // Gera a chave SHA-256 a partir da senha de 4 dígitos
+        const encoder = new TextEncoder();
+        const passData = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', passData);
+        const hashArray = new Uint8Array(hashBuffer);
+
+        // Um arquivo WAV padrão possui o cabeçalho nos primeiros 44 bytes.
+        // Pulamos os 44 bytes para não corromper a leitura do formato e manipulamos apenas os dados PCM.
+        const headerSize = 44; 
+        const audioData = bytes.subarray(headerSize);
+
+        // Aplicação da matemática reversível para criptografia
+        if (mode === 'encrypt') {
+            audioData.reverse(); // 1. Inverte temporalmente
+            for (let i = 0; i < audioData.length; i++) {
+                audioData[i] ^= hashArray[i % hashArray.length]; // 2. Aplica XOR byte a byte
+            }
+            downloadMessage.innerText = "Arquivo criptografado com sucesso";
+        } else {
+            for (let i = 0; i < audioData.length; i++) {
+                audioData[i] ^= hashArray[i % hashArray.length]; // 1. Desfaz XOR
+            }
+            audioData.reverse(); // 2. Desfaz inversão temporal
+            downloadMessage.innerText = "Arquivo descriptografado com sucesso";
+        }
+
+        // Reconstrói o arquivo como um Blob mantendo o cabeçalho original com os dados modificados
+        const processedBlob = new Blob([bytes], { type: 'audio/wav' });
+        const url = URL.createObjectURL(processedBlob);
+
+        // Libera o arquivo final gerado para download
+        downloadLink.href = url;
+        downloadLink.download = mode === 'encrypt' ? 'audio_criptografado.wav' : 'audio_descriptografado.wav';
+        
+        statusDisplay.innerText = "Pronto!";
+        statusDisplay.style.color = "var(--success)";
+        downloadArea.style.display = 'flex';
+
+    } catch (error) {
+        console.error("Erro no processamento:", error);
+        statusDisplay.innerText = "Erro no processamento";
+        statusDisplay.style.color = "red";
+        alert("Ocorreu um erro ao processar o arquivo.");
+    }
+}
+
+</script>
+
+</body>
+</html>
