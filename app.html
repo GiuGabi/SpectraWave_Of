@@ -1778,10 +1778,24 @@ document.getElementById('fileInput')
         const imag =
         new Float64Array(N);
 
-        for(let i=0;i<N;i++){
-
-            signal[i] = mono[i] || 0;
+        // ==========================================
+        // NOVO CÓDIGO: PULANDO O SILÊNCIO INICIAL
+        // ==========================================
+        let startIndex = 0;
+        while (startIndex < mono.length && Math.abs(mono[startIndex]) < 0.01) {
+            startIndex++;
         }
+
+        if (startIndex + N > mono.length) {
+            startIndex = Math.max(0, mono.length - N);
+        }
+
+        for(let i=0; i<N; i++){
+            signal[i] = mono[startIndex + i] || 0;
+        }
+        // ==========================================
+        // FIM DO NOVO CÓDIGO
+        // ==========================================
 
         const timeData =
         new Float64Array(signal);
@@ -1798,7 +1812,7 @@ document.getElementById('fileInput')
             magsArr,
             GAUSSIAN_KERNEL
         );
-
+        
         /* ============================================================
            FFT RESULTS
         ============================================================ */
