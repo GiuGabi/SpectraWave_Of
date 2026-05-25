@@ -1,32 +1,34 @@
-# 🟦 Explicação Completa da Arquitetura Matemática, Física e Lógica do Sistema SPECTRAWAVE
+# 🟦 Arquitetura Completa do SPECTRAWAVE
 
-O arquivo principal do sistema (`app.html`) é o cérebro do projeto **SPECTRAWAVE**.
-Ele controla:
+## Explicação Matemática, Física e Computacional do Sistema
 
-* leitura do áudio;
-* processamento matemático;
-* análise espectral;
-* transformadas de Fourier;
-* filtragem;
-* reconstrução de sinais;
-* criptografia;
-* visualização gráfica.
-
-Tudo acontece diretamente no navegador do usuário usando apenas:
+O **SPECTRAWAVE** é um sistema de análise e criptografia de áudio que funciona inteiramente no navegador usando apenas:
 
 * HTML
 * CSS
-* JavaScript puro (Vanilla JS)
+* JavaScript puro
 
-Sem servidores externos.
+O sistema não depende de servidores externos.
+Todo o processamento acontece localmente no computador do usuário.
 
 ---
 
-# 🟦 VISÃO GERAL DO FUNCIONAMENTO
+# 🟦 O QUE O SISTEMA FAZ
 
-Quando o usuário envia um áudio, o sistema executa várias etapas matemáticas e computacionais.
+Quando um áudio é enviado, o sistema:
 
-Fluxo completo:
+1. lê o arquivo WAV;
+2. extrai os dados binários;
+3. converte o áudio em amostras numéricas;
+4. aplica processamento matemático;
+5. transforma o áudio em frequências;
+6. analisa o espectro sonoro;
+7. reconstrói ondas usando Fourier;
+8. criptografa o áudio.
+
+---
+
+# 🟦 FLUXO COMPLETO DO SISTEMA
 
 ```text
 Áudio WAV
@@ -35,13 +37,13 @@ Leitura binária do arquivo
    ↓
 Extração das amostras PCM
    ↓
-Pré-processamento
+Pré-processamento do sinal
    ↓
 Janelamento de Hann
    ↓
 FFT (Transformada de Fourier)
    ↓
-Cálculo de magnitudes
+Cálculo das magnitudes
    ↓
 Convolução Gaussiana
    ↓
@@ -49,38 +51,34 @@ Visualização do espectro
    ↓
 Análise harmônica
    ↓
-Reconstrução Fourier
+Reconstrução por Fourier
    ↓
-Criptografia XOR + SHA-256
+Criptografia SHA-256 + XOR
 ```
 
 ---
 
-# 🟦 O QUE É UM ÁUDIO DIGITAL?
+# 🟦 O QUE É UM ÁUDIO DIGITAL
 
-Antes de entender o código, precisamos entender o que é um áudio digital.
+## Física do Som
 
----
-
-# Som na Física
-
-Fisicamente, som é:
+Na física, som é:
 
 # Uma onda mecânica longitudinal
 
-O ar vibra e cria compressões.
+O ar vibra e gera regiões de compressão e rarefação.
 
-Essas compressões chegam aos nossos ouvidos.
+Essas vibrações chegam aos nossos ouvidos e são interpretadas pelo cérebro.
 
 ---
 
-# O que o computador vê?
+# 🟦 COMO O COMPUTADOR ENXERGA O SOM
 
-O computador NÃO entende “som”.
+O computador não entende “música” ou “voz”.
 
-Ele vê apenas:
+Ele trabalha apenas com:
 
-# Números
+# números
 
 Exemplo:
 
@@ -90,15 +88,15 @@ Exemplo:
 
 Cada número representa:
 
-# A amplitude da onda sonora em um instante do tempo
+# a amplitude da onda sonora em um instante específico do tempo
 
 ---
 
+# 🟦 PCM — PULSE CODE MODULATION
+
+Arquivos WAV utilizam:
+
 # PCM (Pulse Code Modulation)
-
-Arquivos WAV usam:
-
-# PCM
 
 O áudio é armazenado como milhares de amostras por segundo.
 
@@ -108,7 +106,7 @@ Exemplo:
 44100 Hz
 ```
 
-Significa:
+Isso significa:
 
 # 44.100 amostras por segundo
 
@@ -118,7 +116,9 @@ o computador “fotografa” a onda sonora 44.100 vezes por segundo.
 
 ---
 
-# 🟦 COMO O SISTEMA LÊ O ÁUDIO
+# 🟦 LEITURA DO ARQUIVO WAV
+
+## Código
 
 ```javascript
 const file = fileInput.files[0];
@@ -132,11 +132,13 @@ const bytes =
 
 ---
 
-# O que acontece aqui?
+# 🟦 O QUE CADA LINHA FAZ
 
----
+## 1. Captura do arquivo
 
-## 1. fileInput.files[0]
+```javascript
+const file = fileInput.files[0];
+```
 
 Pega o arquivo enviado pelo usuário.
 
@@ -148,25 +150,31 @@ musica.wav
 
 ---
 
-## 2. arrayBuffer()
+## 2. Conversão para memória binária
 
-Transforma o arquivo em memória binária.
+```javascript
+await file.arrayBuffer();
+```
 
-O navegador lê:
+Transforma o arquivo em dados binários armazenados na memória.
+
+O navegador passa a enxergar algo parecido com:
 
 ```text
-010101010101010
+010101010101010...
 ```
 
 ---
 
-## 3. Uint8Array
+## 3. Conversão para vetor de bytes
 
-Converte os dados em:
+```javascript
+new Uint8Array(arrayBuffer);
+```
 
-# Vetor de bytes
+Transforma os dados em um vetor numérico.
 
-Cada posição guarda um número de:
+Cada posição guarda um byte:
 
 ```text
 0 → 255
@@ -182,7 +190,7 @@ Exemplo:
 
 # 🟦 ESTRUTURA INTERNA DO WAV
 
-Um arquivo WAV possui duas partes:
+Um arquivo WAV possui duas partes principais:
 
 ```text
 [ CABEÇALHO ][ DADOS DE ÁUDIO ]
@@ -190,26 +198,34 @@ Um arquivo WAV possui duas partes:
 
 ---
 
-# Cabeçalho (44 bytes)
+# 🟦 CABEÇALHO
 
-Contém:
+O cabeçalho possui informações como:
 
-* sample rate
-* quantidade de canais
-* profundidade de bits
-* tipo de codificação
+* sample rate;
+* número de canais;
+* profundidade de bits;
+* formato do áudio.
 
----
+Normalmente ocupa:
 
-# PCM Data
-
-Aqui ficam:
-
-# As amostras reais do áudio
+```text
+44 bytes
+```
 
 ---
 
-# Código
+# 🟦 DADOS PCM
+
+Após o cabeçalho ficam:
+
+# as amostras reais do áudio
+
+---
+
+# 🟦 EXTRAÇÃO DOS DADOS SONOROS
+
+## Código
 
 ```javascript
 const headerSize = 44;
@@ -220,29 +236,33 @@ const audioData =
 
 ---
 
-# O que isso faz?
+# 🟦 O QUE ISSO FAZ
 
-Ignora os 44 primeiros bytes.
+O sistema ignora os primeiros 44 bytes do arquivo.
 
-Pega apenas:
+Esses bytes pertencem ao cabeçalho.
 
-# Os dados sonoros reais
+Depois disso, ele pega apenas:
+
+# os dados reais do som
 
 ---
 
-# Por que isso é importante?
+# 🟦 POR QUE ISSO É IMPORTANTE
 
 Se o cabeçalho for alterado:
 
-* o arquivo quebra;
-* o player não entende o áudio;
-* o WAV fica corrompido.
+* o áudio corrompe;
+* o player não reconhece o arquivo;
+* o WAV deixa de funcionar.
 
-Por isso apenas os dados PCM são processados.
+Por isso o sistema processa apenas os dados PCM.
 
 ---
 
 # 🟦 AJUSTE PARA POTÊNCIA DE 2
+
+## Código
 
 ```javascript
 function nextPowerOfTwo(n) {
@@ -259,11 +279,11 @@ function nextPowerOfTwo(n) {
 
 ---
 
-# O que essa função faz?
+# 🟦 POR QUE ISSO EXISTE
 
-A FFT precisa obrigatoriamente que o tamanho do vetor seja:
+A FFT exige que o tamanho do vetor seja:
 
-# Potência de 2
+# potência de 2
 
 Exemplos válidos:
 
@@ -277,9 +297,9 @@ Exemplos válidos:
 
 ---
 
-# Por que?
+# 🟦 MOTIVO MATEMÁTICO
 
-Porque o algoritmo FFT divide o sinal em metades continuamente.
+A FFT divide o sinal continuamente em metades.
 
 Exemplo:
 
@@ -293,37 +313,39 @@ Exemplo:
 128 + 128
 ```
 
-Se o número não for potência de 2:
+Se o tamanho não for potência de 2:
 
-a divisão recursiva quebra.
+o algoritmo quebra a divisão recursiva.
 
 ---
 
-# Operador Binário
+# 🟦 OPERAÇÃO BINÁRIA
+
+## Código
 
 ```javascript
 p <<= 1
 ```
 
-Significa:
+Isso significa:
 
-# Deslocar bits para esquerda
+# deslocamento binário para esquerda
 
 ---
 
-# Exemplo Binário
+# 🟦 EXEMPLO
 
 ```text
 0001 → 0010
 ```
 
-Decimalmente:
+Decimal:
 
 ```text
 1 → 2
 ```
 
-Outro:
+Outro exemplo:
 
 ```text
 0010 → 0100
@@ -337,9 +359,9 @@ Decimal:
 
 ---
 
-# Matemática Envolvida
+# 🟦 FÓRMULA MATEMÁTICA
 
-A função busca:
+O algoritmo busca:
 
 2^n \geq N
 
@@ -350,17 +372,19 @@ Onde:
 
 ---
 
-# Objetivo
+# 🟦 OBJETIVO
 
 Garantir:
 
-* estabilidade matemática;
 * compatibilidade com FFT;
-* máxima velocidade computacional.
+* estabilidade matemática;
+* maior velocidade computacional.
 
 ---
 
 # 🟦 JANELAMENTO DE HANN
+
+## Código
 
 ```javascript
 function applyHannWindow(signal) {
@@ -383,11 +407,11 @@ function applyHannWindow(signal) {
 
 ---
 
-# Problema Físico
+# 🟦 PROBLEMA DO CORTE DIGITAL
 
-O áudio real é contínuo.
+O som real é contínuo.
 
-Mas o computador corta apenas um pedaço dele.
+Mas o computador analisa apenas um trecho dele.
 
 Exemplo:
 
@@ -397,44 +421,39 @@ onda infinita
 [ trecho analisado ]
 ```
 
-Esse corte cria:
+Esse corte gera:
 
-# Descontinuidade
-
----
-
-# Consequência
-
-A FFT interpreta isso como frequências falsas.
-
-Fenômeno:
-
-# Spectral Leakage
-
-(Vazamento espectral)
+# descontinuidade
 
 ---
 
-# Fórmula da Janela de Hann
+# 🟦 CONSEQUÊNCIA
+
+A FFT interpreta o corte como frequências falsas.
+
+Esse fenômeno chama-se:
+
+# Spectral Leakage (vazamento espectral)
+
+---
+
+# 🟦 FÓRMULA DA JANELA DE HANN
 
 w[n]=0.5\left(1-\cos\left(\frac{2\pi n}{N-1}\right)\right)
 
 ---
 
-# O que ela faz?
+# 🟦 O QUE A JANELA FAZ
 
-Ela suaviza:
+Ela suaviza o início e o fim do sinal.
 
-* começo do sinal;
-* final do sinal.
-
-Transformando:
+Transforma isso:
 
 ```text
 ██████████
 ```
 
-em:
+em algo mais suave:
 
 ```text
 ▁▃▅▇█▇▅▃▁
@@ -442,17 +461,19 @@ em:
 
 ---
 
-# Efeito Matemático
+# 🟦 RESULTADO
 
 Reduz:
 
-* ruídos artificiais;
 * frequências fantasmas;
+* ruídos artificiais;
 * distorções espectrais.
 
 ---
 
 # 🟦 FFT — TRANSFORMADA RÁPIDA DE FOURIER
+
+## Código
 
 ```javascript
 function fft(real, imag) {
@@ -465,9 +486,9 @@ function fft(real, imag) {
 
 ---
 
-# O que a FFT faz?
+# 🟦 O QUE A FFT FAZ
 
-Transforma o áudio do:
+A FFT transforma o sinal do:
 
 ```text
 Domínio do Tempo
@@ -481,7 +502,7 @@ Domínio da Frequência
 
 ---
 
-# Tempo
+# 🟦 DOMÍNIO DO TEMPO
 
 Mostra:
 
@@ -491,17 +512,17 @@ amplitude vs tempo
 
 ---
 
-# Frequência
+# 🟦 DOMÍNIO DA FREQUÊNCIA
 
 Mostra:
 
 ```text
-quais frequências existem
+quais frequências existem no áudio
 ```
 
 ---
 
-# Exemplo
+# 🟦 EXEMPLO MUSICAL
 
 Uma música possui:
 
@@ -509,28 +530,28 @@ Uma música possui:
 * médios;
 * agudos.
 
-A FFT separa tudo isso.
+A FFT separa cada frequência individualmente.
 
 ---
 
-# Fórmula da DFT
+# 🟦 FÓRMULA DA DFT
 
 X[k]=\sum_{n=0}^{N-1}x[n]e^{-i\frac{2\pi kn}{N}}
 
 ---
 
-# Explicação de cada parte
+# 🟦 SIGNIFICADO DOS SÍMBOLOS
 
 | Símbolo        | Significado           |
 | -------------- | --------------------- |
 | (x[n])         | sinal original        |
 | (X[k])         | frequência encontrada |
-| (e^{-i\theta}) | rotação complexa      |
 | (N)            | número de amostras    |
+| (e^{-i\theta}) | rotação complexa      |
 
 ---
 
-# Números Complexos
+# 🟦 NÚMEROS COMPLEXOS
 
 A FFT trabalha com:
 
@@ -540,12 +561,12 @@ a + bi
 
 Onde:
 
-* (a) → parte real
-* (b) → parte imaginária
+* (a) = parte real
+* (b) = parte imaginária
 
 ---
 
-# Por que números complexos?
+# 🟦 POR QUE NÚMEROS COMPLEXOS
 
 Porque ondas possuem:
 
@@ -555,13 +576,13 @@ Porque ondas possuem:
 
 ---
 
-# Identidade de Euler
+# 🟦 IDENTIDADE DE EULER
 
 e^{i\theta}=\cos(\theta)+i\sin(\theta)
 
 ---
 
-# Significado Físico
+# 🟦 INTERPRETAÇÃO FÍSICA
 
 Toda onda pode ser representada por:
 
@@ -573,7 +594,7 @@ Toda onda pode ser representada por:
 
 # 🟦 BIT REVERSAL
 
-A FFT reorganiza índices.
+A FFT reorganiza índices binários.
 
 Exemplo:
 
@@ -583,11 +604,9 @@ Exemplo:
 
 ---
 
-# Por que?
+# 🟦 OBJETIVO
 
-Para dividir o problema em partes menores.
-
-A FFT usa:
+Permitir que o algoritmo utilize:
 
 # Divide and Conquer
 
@@ -595,25 +614,31 @@ A FFT usa:
 
 ---
 
-# Complexidade Computacional
+# 🟦 COMPLEXIDADE COMPUTACIONAL
 
 DFT tradicional:
 
-O(N^2)
+```text
+O(N²)
+```
 
 FFT:
 
-O(N\log N)
+```text
+O(N log N)
+```
 
 ---
 
-# Resultado
+# 🟦 RESULTADO
 
-Processamento extremamente mais rápido.
+A FFT é extremamente mais rápida.
 
 ---
 
 # 🟦 BUTTERFLY OPERATION
+
+## Código
 
 ```javascript
 const angle =
@@ -628,7 +653,7 @@ const wiStep =
 
 ---
 
-# O que acontece aqui?
+# 🟦 O QUE ACONTECE AQUI
 
 A FFT combina frequências usando rotações trigonométricas.
 
@@ -638,20 +663,22 @@ Esse processo chama-se:
 
 ---
 
-# Papel da trigonometria
+# 🟦 TRIGONOMETRIA UTILIZADA
 
-O sistema usa:
+O algoritmo usa:
 
 * seno;
 * cosseno;
 * Euler;
 * números complexos.
 
-Para decompor a onda original.
+Para decompor a onda original em frequências menores.
 
 ---
 
 # 🟦 CÁLCULO DE MAGNITUDE
+
+## Código
 
 ```javascript
 out[i] = Math.sqrt(
@@ -662,33 +689,33 @@ out[i] = Math.sqrt(
 
 ---
 
-# Problema
+# 🟦 PROBLEMA
 
 A FFT retorna números complexos.
 
 Mas o gráfico precisa mostrar:
 
-# Intensidade real da frequência
+# intensidade real da frequência
 
 ---
 
-# Fórmula
+# 🟦 FÓRMULA
 
 |X[k]|=\sqrt{Re(X[k])^2+Im(X[k])^2}
 
 ---
 
-# Matemática Utilizada
+# 🟦 BASE MATEMÁTICA
 
-Baseado no:
+Essa fórmula vem do:
 
 # Teorema de Pitágoras
 
 ---
 
-# Interpretação Física
+# 🟦 INTERPRETAÇÃO FÍSICA
 
-Magnitude significa:
+Magnitude representa:
 
 * força;
 * energia;
@@ -696,7 +723,7 @@ Magnitude significa:
 
 ---
 
-# Exemplo
+# 🟦 EXEMPLO
 
 Se:
 
@@ -706,13 +733,15 @@ Se:
 
 possui magnitude alta:
 
-então o som possui forte presença dessa frequência.
+então o áudio possui forte presença dessa frequência.
 
 (440 Hz = nota Lá)
 
 ---
 
 # 🟦 CONVOLUÇÃO GAUSSIANA
+
+## Kernel Gaussiano
 
 ```javascript
 const GAUSSIAN_KERNEL = [
@@ -728,9 +757,9 @@ const GAUSSIAN_KERNEL = [
 
 ---
 
-# Problema
+# 🟦 PROBLEMA
 
-O espectro FFT bruto é muito pontiagudo.
+O espectro FFT bruto é muito irregular.
 
 Exemplo:
 
@@ -738,65 +767,57 @@ Exemplo:
 | | || ||| |||||| || |
 ```
 
-Muito ruído visual.
-
 ---
 
-# Solução
+# 🟦 SOLUÇÃO
 
 Aplicar:
 
-# Convolução
-
-com:
-
-# Kernel Gaussiano
+# convolução gaussiana
 
 ---
 
-# Fórmula
+# 🟦 FÓRMULA DA CONVOLUÇÃO
 
 (f*g)[n]=\sum_{k=0}^{K-1}f[n-k]g[k]
 
 ---
 
-# O que é convolução?
+# 🟦 O QUE É CONVOLUÇÃO
 
 Misturar informações vizinhas.
 
----
+Cada ponto passa a considerar:
 
-# Interpretação simples
-
-Cada ponto do gráfico passa a considerar:
-
-* seus vizinhos;
+* os pontos ao redor;
 * médias ponderadas;
 * suavização local.
 
 ---
 
-# Resultado
+# 🟦 RESULTADO
 
 O gráfico fica:
 
-* mais limpo;
 * mais suave;
+* mais limpo;
 * mais estável.
 
 ---
 
-# Filtro Passa-Baixa
+# 🟦 FILTRO PASSA-BAIXA
 
-O kernel gaussiano atua como:
+O kernel gaussiano funciona como:
 
 # Low Pass Filter
 
-Ele reduz mudanças bruscas.
+Ele reduz mudanças bruscas no espectro.
 
 ---
 
 # 🟦 SÉRIE DE FOURIER
+
+## Código
 
 ```javascript
 function calculateFourierSeries(
@@ -809,41 +830,29 @@ function calculateFourierSeries(
 
 ---
 
-# Ideia Central
+# 🟦 IDEIA CENTRAL
 
-Fourier descobriu algo revolucionário:
+Fourier descobriu que:
 
-# Qualquer onda periódica pode ser construída usando senos e cossenos
+# qualquer onda periódica pode ser construída usando senos e cossenos
 
 ---
 
-# Fórmula Geral
+# 🟦 FÓRMULA GERAL
 
 f(t)=a_0+\sum_{n=1}^{\infty}(a_n\cos(n\omega t)+b_n\sin(n\omega t))
 
 ---
 
-# Significado
+# 🟦 HARMÔNICOS
 
-Uma onda complexa:
+Cada seno adicional é chamado de:
 
-```text
-████▓▒▒
-```
-
-pode ser reconstruída usando ondas simples.
+# harmônico
 
 ---
 
-# Harmônicos
-
-Cada seno adicional é chamado:
-
-# Harmônico
-
----
-
-# Exemplo Musical
+# 🟦 EXEMPLO MUSICAL
 
 Se a frequência fundamental é:
 
@@ -851,7 +860,7 @@ Se a frequência fundamental é:
 440 Hz
 ```
 
-os harmônicos são:
+os harmônicos podem ser:
 
 ```text
 880 Hz
@@ -861,7 +870,9 @@ os harmônicos são:
 
 ---
 
-# Coeficientes
+# 🟦 CÁLCULO DOS COEFICIENTES
+
+## Código
 
 ```javascript
 an += samples[i] * Math.cos(omega);
@@ -871,7 +882,7 @@ bn += samples[i] * Math.sin(omega);
 
 ---
 
-# Fórmulas
+# 🟦 FÓRMULAS
 
 a_n=\frac{2}{N}\sum x[t]\cos(n\omega_0 t)
 
@@ -879,17 +890,19 @@ b_n=\frac{2}{N}\sum x[t]\sin(n\omega_0 t)
 
 ---
 
-# Objetivo Matemático
+# 🟦 OBJETIVO
 
 Descobrir:
 
 * quais senos existem;
 * quais cossenos existem;
-* intensidade de cada um.
+* intensidade de cada frequência.
 
 ---
 
 # 🟦 COMPONENTE DC
+
+## Código
 
 ```javascript
 a0 += samples[i];
@@ -897,23 +910,27 @@ a0 += samples[i];
 
 ---
 
-# O que é DC?
-
-É o valor médio da onda.
-
----
-
-# Interpretação Física
+# 🟦 O QUE É DC
 
 Representa:
 
-* offset;
+# o valor médio do sinal
+
+---
+
+# 🟦 INTERPRETAÇÃO FÍSICA
+
+Corresponde ao:
+
 * deslocamento vertical;
-* média do sinal.
+* offset do sinal;
+* média da onda.
 
 ---
 
 # 🟦 CRIPTOGRAFIA SHA-256
+
+## Código
 
 ```javascript
 const hashBuffer =
@@ -925,25 +942,15 @@ const hashBuffer =
 
 ---
 
-# O que é SHA-256?
+# 🟦 O QUE É SHA-256
 
 É uma função matemática criptográfica.
 
-Ela transforma:
-
-```text
-senha pequena
-```
-
-em:
-
-```text
-hash gigante pseudoaleatório
-```
+Ela transforma uma senha em um hash gigantesco.
 
 ---
 
-# Exemplo
+# 🟦 EXEMPLO
 
 ```text
 "senha123"
@@ -953,17 +960,19 @@ A94F239A...
 
 ---
 
-# Propriedades
+# 🟦 PROPRIEDADES
 
 SHA-256 é:
 
-* irreversível;
 * determinístico;
+* irreversível;
 * extremamente complexo matematicamente.
 
 ---
 
 # 🟦 XOR
+
+## Código
 
 ```javascript
 audioData[i] ^=
@@ -974,13 +983,13 @@ audioData[i] ^=
 
 ---
 
-# O que é XOR?
+# 🟦 O QUE É XOR
 
-Operação booleana binária.
+Operação lógica binária.
 
 ---
 
-# Tabela XOR
+# 🟦 TABELA XOR
 
 | A | B | Resultado |
 | - | - | --------- |
@@ -991,13 +1000,13 @@ Operação booleana binária.
 
 ---
 
-# Fórmula
+# 🟦 FÓRMULA
 
 C_i=P_i\oplus K_{(i\bmod 32)}
 
 ---
 
-# Significado
+# 🟦 SIGNIFICADO
 
 | Símbolo | Significado        |
 | ------- | ------------------ |
@@ -1007,22 +1016,24 @@ C_i=P_i\oplus K_{(i\bmod 32)}
 
 ---
 
-# Propriedade Matemática
+# 🟦 PROPRIEDADE MATEMÁTICA
 
 (A\oplus B)\oplus B=A
 
 ---
 
-# Consequência
+# 🟦 CONSEQUÊNCIA
 
-A mesma operação:
+A mesma operação serve para:
 
-* criptografa;
-* descriptografa.
+* criptografar;
+* descriptografar.
 
 ---
 
 # 🟦 INVERSÃO TEMPORAL
+
+## Código
 
 ```javascript
 audioData.reverse();
@@ -1030,13 +1041,13 @@ audioData.reverse();
 
 ---
 
-# O que isso faz?
+# 🟦 O QUE ISSO FAZ
 
 Inverte completamente o áudio.
 
 ---
 
-# Exemplo
+# 🟦 EXEMPLO
 
 Antes:
 
@@ -1052,9 +1063,9 @@ Depois:
 
 ---
 
-# Efeito Físico
+# 🟦 EFEITO FÍSICO
 
-O áudio toca:
+O som toca:
 
 * de trás para frente;
 * completamente embaralhado.
@@ -1097,13 +1108,12 @@ Reverse novamente
 
 O SPECTRAWAVE demonstra que:
 
-# Áudio é matemática pura
+# áudio é matemática aplicada
 
 O sistema utiliza:
 
 * álgebra linear;
 * trigonometria;
-* cálculo numérico;
 * DSP;
 * números complexos;
 * Fourier;
@@ -1118,14 +1128,14 @@ O sistema utiliza:
 
 O `app.html` funciona como:
 
-# Um laboratório matemático e físico de áudio digital
+# um laboratório matemático e físico de áudio digital
 
 Ele:
 
 * lê sinais sonoros;
 * transforma ondas em frequências;
 * aplica FFT manual;
-* usa Euler e Fourier;
+* utiliza Fourier e Euler;
 * reconstrói ondas;
 * suaviza espectros;
 * calcula magnitudes;
