@@ -2221,7 +2221,7 @@ async function runCrypto(mode) {
 
         await addLog(`Aplicando operação matemática XOR byte a byte...`, "#ba68c8");
         for (let i = 0; i < audioData.length; i++) {
-            audioData[i] ^= hashArray[i % hashArray.length]; 
+            audioData[i] ^= hashArray[i % hashArray.length];  
         }
 
         await addLog("Reconstruindo estrutura e cabeçalho do arquivo WAV...");
