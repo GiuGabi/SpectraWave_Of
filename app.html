@@ -800,6 +800,40 @@ canvas{
     gap: 15px;
 }
 
+/* ============================================================
+   TERMINAL DE LOGS
+============================================================ */
+.crypto-terminal {
+    margin-top: 25px;
+    background: #050505;
+    border: 1px solid #333;
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    text-align: left;
+}
+.terminal-header {
+    background: #111;
+    padding: 8px 15px;
+    color: #888;
+    border-bottom: 1px solid #333;
+    font-size: 11px;
+}
+.terminal-body {
+    padding: 15px;
+    color: #00e676;
+    height: 140px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.log-line {
+    opacity: 0;
+    animation: fadeIn 0.2s forwards;
+}
+@keyframes fadeIn { to { opacity: 1; } }
 
 </style>
 </head>
@@ -1095,36 +1129,21 @@ COEFICIENTES CALCULADOS MANUALMENTE
             <div>
                 <span class="crypto-section-badge">PROCESSAMENTO LOCAL</span>
                 <h2>Criptografar / Descriptografar WAV</h2>
-                <p>O arquivo é processado localmente no navegador utilizando SHA-256 + XOR simétrico sem envio de dados externos.</p>
+                <p>A senha é a chave do processo. Criptografar transforma o áudio em puro ruído branco. Inserir a mesma senha e descriptografar reverte o processo perfeitamente.</p>
             </div>
         </div>
 
-        <label class="crypto-dropzone">
+        <label class="crypto-dropzone" id="dropzoneUI">
             <div class="crypto-drop-icon">⬆</div>
-            <h3>Selecionar Arquivo WAV</h3>
-            <span id="fileNameDisplay">Clique para carregar o áudio</span>
+            <h3 id="dropzoneTitle">Selecionar Arquivo WAV</h3>
+            <span id="fileNameDisplay">Nenhum áudio alocado no sistema.</span>
             <input type="file" id="cryptoFileInput" accept=".wav">
         </label>
 
-        <div class="crypto-meta-card">
-            <div class="meta-line">
-                <span>Status</span>
-                <strong id="cryptoMetaDisplay">Aguardando arquivo...</strong>
-            </div>
-            <div class="meta-line">
-                <span>Formato</span>
-                <strong>WAV PCM</strong>
-            </div>
-            <div class="meta-line">
-                <span>Criptografia</span>
-                <strong>XOR + SHA-256</strong>
-            </div>
-        </div>
-
         <div class="crypto-password-area">
-            <label>Senha Numérica</label>
-            <input type="password" id="cryptoPassword" maxlength="4" placeholder="Digite 4 dígitos" class="crypto-password-input">
-            <small>A mesma senha será necessária para descriptografar o áudio.</small>
+            <label>Senha Numérica Obrigatória</label>
+            <input type="password" id="cryptoPassword" maxlength="4" placeholder="Ex: 1234" class="crypto-password-input">
+            <small>A mesma senha será necessária para descriptografar e recuperar o áudio.</small>
         </div>
 
         <div class="crypto-buttons">
@@ -1132,9 +1151,15 @@ COEFICIENTES CALCULADOS MANUALMENTE
             <button class="crypto-action-btn secondary" onclick="runCrypto('decrypt')">Descriptografar</button>
         </div>
 
+        <div class="crypto-terminal" id="cryptoTerminal" style="display: none;">
+            <div class="terminal-header">Terminal de Processamento do Sistema</div>
+            <div class="terminal-body" id="terminalLog"></div>
+        </div>
+
         <div id="downloadArea" class="crypto-download-card" style="display: none;">
-            <div class="download-success" id="downloadMessage">✓ Arquivo processado com sucesso</div>
-            <a id="cryptoDownload" href="#" download class="download-btn"> Baixar Arquivo</a>
+            <div class="download-success" id="downloadMessage">✓ Processamento Concluído</div>
+            <audio id="cryptoAudioPlayer" controls style="width: 100%; margin: 10px 0; outline: none;"></audio>
+            <a id="cryptoDownload" href="#" download class="download-btn">Baixar Arquivo .WAV</a>
         </div>
     </div>
 
@@ -1161,7 +1186,7 @@ COEFICIENTES CALCULADOS MANUALMENTE
         </div>
     </div>
     
-    </section>
+</section>
 
 </main>
 
@@ -2090,85 +2115,134 @@ document.getElementById('fileInput')
 });
 
 /* ============================================================
-   LÓGICA DE CRIPTOGRAFIA WAV
+   LÓGICA DE CRIPTOGRAFIA WAV 
 ============================================================ */
 
+// Feedback visual imediato ao carregar o arquivo
 document.getElementById('cryptoFileInput').addEventListener('change', function(e) {
-    const fileName = e.target.files[0] ? e.target.files[0].name : "Clique para carregar o áudio";
-    document.getElementById('fileNameDisplay').innerText = fileName;
+    const file = e.target.files[0];
+    const dropzone = document.getElementById('dropzoneUI');
+    const nameDisplay = document.getElementById('fileNameDisplay');
+    const titleDisplay = document.getElementById('dropzoneTitle');
+    
+    if (file) {
+        // Áudio alocado com sucesso!
+        titleDisplay.innerText = "Áudio Alocado no Sistema!";
+        nameDisplay.innerText = "✅ " + file.name;
+        dropzone.style.borderColor = "var(--success)";
+        dropzone.style.background = "rgba(0, 230, 118, 0.05)";
+    } else {
+        // Reset se cancelar
+        titleDisplay.innerText = "Selecionar Arquivo WAV";
+        nameDisplay.innerText = "Nenhum áudio alocado no sistema.";
+        dropzone.style.borderColor = "rgba(255,214,0,0.3)";
+        dropzone.style.background = "rgba(255,214,0,0.02)";
+    }
+    
+    // Esconde a área de download ao trocar de arquivo
+    document.getElementById('downloadArea').style.display = 'none';
 });
 
 async function runCrypto(mode) {
     const fileInput = document.getElementById('cryptoFileInput');
     const password = document.getElementById('cryptoPassword').value;
-    const statusDisplay = document.getElementById('cryptoMetaDisplay');
     const downloadArea = document.getElementById('downloadArea');
     const downloadLink = document.getElementById('cryptoDownload');
     const downloadMessage = document.getElementById('downloadMessage');
+    const audioPlayer = document.getElementById('cryptoAudioPlayer');
+    
+    // Elementos do Terminal
+    const terminal = document.getElementById('cryptoTerminal');
+    const logArea = document.getElementById('terminalLog');
+
+    // Função interna para injetar logs no terminal com delay
+    const addLog = async (text, color = "#00e676") => {
+        terminal.style.display = 'block';
+        const span = document.createElement('span');
+        span.className = 'log-line';
+        span.style.color = color;
+        span.innerText = `> ${text}`;
+        logArea.appendChild(span);
+        logArea.scrollTop = logArea.scrollHeight; // Auto-scroll
+        await new Promise(r => setTimeout(r, 400)); // Delay cinematográfico
+    };
 
     if (!fileInput.files.length) {
-        alert("Por favor, selecione um arquivo WAV.");
+        alert("⚠️ Por favor, aloque um arquivo WAV no sistema primeiro.");
         return;
     }
     
-    // Validação estrita da senha
     if (password.length !== 4 || isNaN(password)) {
-        alert("A senha deve conter exatamente 4 dígitos numéricos.");
+        alert("⚠️ Ação bloqueada! Você precisa digitar uma senha de exatos 4 números.");
         return;
     }
 
-    statusDisplay.innerText = "Processando criptografia...";
-    statusDisplay.style.color = "var(--bee-yellow)";
+    // Limpa a tela antes de começar
+    logArea.innerHTML = '';
     downloadArea.style.display = 'none';
 
     try {
         const file = fileInput.files[0];
+        
+        await addLog(`Iniciando modo de ${mode === 'encrypt' ? 'Criptografia' : 'Descriptografia'}...`, "#FFD600");
+        await addLog(`Lendo buffer do arquivo alocado: ${file.name}`);
+        
         const arrayBuffer = await file.arrayBuffer();
         const bytes = new Uint8Array(arrayBuffer);
 
-        // Gera a chave SHA-256 a partir da senha de 4 dígitos
+        await addLog("Derivando chave criptográfica SHA-256 a partir da senha...");
         const encoder = new TextEncoder();
         const passData = encoder.encode(password);
         const hashBuffer = await crypto.subtle.digest('SHA-256', passData);
         const hashArray = new Uint8Array(hashBuffer);
 
-        // Um arquivo WAV padrão possui o cabeçalho nos primeiros 44 bytes.
-        // Pulamos os 44 bytes para não corromper a leitura do formato e manipulamos apenas os dados PCM.
-        const headerSize = 44; 
-        const audioData = bytes.subarray(headerSize);
+        await addLog("Varrendo cabeçalho WAV ignorando metadados (RIFF/WAVE)...");
+        let dataOffset = 12; 
+        let dataSize = 0;
 
-        // Aplicação da matemática reversível para criptografia
-        if (mode === 'encrypt') {
-            audioData.reverse(); // 1. Inverte temporalmente
-            for (let i = 0; i < audioData.length; i++) {
-                audioData[i] ^= hashArray[i % hashArray.length]; // 2. Aplica XOR byte a byte
+        while (dataOffset < bytes.length) {
+            const chunkId = String.fromCharCode(bytes[dataOffset], bytes[dataOffset+1], bytes[dataOffset+2], bytes[dataOffset+3]);
+            const chunkSize = new DataView(bytes.buffer).getUint32(dataOffset + 4, true);
+
+            if (chunkId === 'data') {
+                dataOffset += 8; 
+                dataSize = chunkSize;
+                break;
             }
-            downloadMessage.innerText = "Arquivo criptografado com sucesso";
-        } else {
-            for (let i = 0; i < audioData.length; i++) {
-                audioData[i] ^= hashArray[i % hashArray.length]; // 1. Desfaz XOR
-            }
-            audioData.reverse(); // 2. Desfaz inversão temporal
-            downloadMessage.innerText = "Arquivo descriptografado com sucesso";
+            dataOffset += 8 + chunkSize; 
         }
 
-        // Reconstrói o arquivo como um Blob mantendo o cabeçalho original com os dados modificados
+        if (dataSize === 0 || dataOffset >= bytes.length) {
+            throw new Error("WAV corrompido ou sem chunk 'data'.");
+        }
+
+        await addLog(`Chunk 'data' isolado com sucesso. Tamanho: ${dataSize} bytes.`, "#40c4ff");
+        const audioData = bytes.subarray(dataOffset, dataOffset + dataSize);
+
+        await addLog(`Aplicando operação matemática XOR byte a byte...`, "#ba68c8");
+        for (let i = 0; i < audioData.length; i++) {
+            audioData[i] ^= hashArray[i % hashArray.length]; 
+        }
+
+        await addLog("Reconstruindo estrutura e cabeçalho do arquivo WAV...");
+        downloadMessage.innerText = mode === 'encrypt' 
+            ? "🔒 Áudio criptografado com sucesso!" 
+            : "🔓 Áudio descriptografado com sucesso!";
+
         const processedBlob = new Blob([bytes], { type: 'audio/wav' });
         const url = URL.createObjectURL(processedBlob);
 
-        // Libera o arquivo final gerado para download
+        audioPlayer.src = url;
         downloadLink.href = url;
-        downloadLink.download = mode === 'encrypt' ? 'audio_criptografado.wav' : 'audio_descriptografado.wav';
+        downloadLink.download = mode === 'encrypt' ? 'audio_seguro.wav' : 'audio_restaurado.wav';
         
-        statusDisplay.innerText = "Pronto!";
-        statusDisplay.style.color = "var(--success)";
+        await addLog("PROCESSO CONCLUÍDO. Áudio injetado no player.", "#FFD600");
         downloadArea.style.display = 'flex';
 
     } catch (error) {
-        console.error("Erro no processamento:", error);
-        statusDisplay.innerText = "Erro no processamento";
-        statusDisplay.style.color = "red";
-        alert("Ocorreu um erro ao processar o arquivo.");
+        console.error(error);
+        await addLog("ERRO FATAL: " + error.message, "#ff1744");
+        alert("Ocorreu um erro matemático ao processar o arquivo.");
     }
 }
 
